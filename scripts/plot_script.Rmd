@@ -1,0 +1,183 @@
+---
+title: "vcfR_plot"
+author: "ashar"
+date: "2026-06-20"
+output: html_document
+---
+# A. Pacakages preparation
+## 1. Install packages plotVCF
+```{r}
+BiocManager::install("DelayedMatrixStats")
+install.packages("VariantAnnotation")
+install.packages("ggplot2")
+install.packages("vcfR")
+install.packages("withr")
+
+```
+
+## 2. Load vcfR library
+
+```{r}
+library(VariantAnnotation)
+library(ggplot2)
+library(vcfR)
+library(DelayedMatrixStats)
+library(withr)
+library(gridExtra)
+```
+# B.File load
+
+## 1. Import file for analysis (.vcf, .gff, .fasta)
+```{r}
+vcf <- read.vcfR("F:/materi_wgs_inbio/wgs/results/snpEff/variants_annotated.vcf")
+
+```
+## 2. Data clean
+```{r}
+vcf_filtered <- vcf[vcf@fix[, "CHROM"] != "NZ_OW968330.1", ] #Remove plasmid contig
+```
+
+## 3. Convert into data frame
+```{r}
+df <- as.data.frame(getFIX(vcf_filtered))
+df$POS <- as.numeric(df$POS)
+df$QUAL <- as.numeric(df$QUAL)
+```
+
+# C. Make plot
+## 1. Manhattan plot
+```{r}
+manhattan_plot <- ggplot(df, aes(x = POS, y = QUAL, color = CHROM)) +
+  geom_point(alpha = 0.5) +
+  facet_wrap(~CHROM, scales = "free_x") +
+  theme_minimal() +
+  labs(x = "Position", y = "Quality", title = "Variants - Mycobacterium tuberculosis")
+```
+
+## 2. Pie chart
+
+### a. Extract ANN field from INFO field
+```{r}
+info      <- getINFO(vcf)
+ann_raw   <- regmatches(info, regexpr("ANN=[^;]+", info))
+ann_clean <- sub("ANN=", "", ann_raw)
+ 
+# Split each variant's annotations by comma, explode ALL transcripts
+all_ann   <- unlist(strsplit(ann_clean, ","))
+ann_parts <- strsplit(all_ann, "\\|")
+ 
+annotation <- sapply(ann_parts, function(x) if (length(x) >= 2) trimws(x[2]) else NA_character_)
+impact     <- sapply(ann_parts, function(x) if (length(x) >= 3) trimws(x[3]) else NA_character_)
+
+cat("\n=== Raw unique annotation values (first 20) ===\n")
+print(head(sort(unique(annotation)), 20))
+ 
+cat("\n=== Raw unique impact values ===\n")
+print(sort(unique(impact)))
+```
+
+
+### b. Categorise SNP type
+```{r}
+snp_type <- dplyr::case_when(
+  grepl("missense_variant",               annotation, ignore.case = TRUE) ~ "Missense",
+  grepl("synonymous_variant",             annotation, ignore.case = TRUE) ~ "Silent",
+  grepl("stop_gained|stop_lost|nonsense", annotation, ignore.case = TRUE) ~ "Nonsense",
+  TRUE ~ "Other"
+)
+```
+
+### c. Categorise impact
+```{r}
+impact_cat <- dplyr::case_when(
+  impact == "MODIFIER" ~ "Modifier",
+  impact == "LOW"      ~ "Low",
+  impact == "MODERATE" ~ "Moderate",
+  impact == "HIGH"     ~ "High",
+  TRUE ~ NA_character_
+)
+```
+
+### c. Count and calculate percentage 
+```{r}
+make_pct_df <- function(vec, levels_order) {
+  vec <- vec[!is.na(vec)]
+  tbl <- table(factor(vec, levels = levels_order))
+  df  <- as.data.frame(tbl, stringsAsFactors = FALSE)
+  colnames(df) <- c("label", "count")
+  df$pct   <- round(df$count / sum(df$count) * 100, 2)
+  df$label <- factor(df$label, levels = levels_order)
+  df
+}
+ 
+snp_df    <- make_pct_df(snp_type,   c("Missense", "Silent", "Nonsense"))
+impact_df <- make_pct_df(impact_cat, c("Modifier", "Low", "Moderate", "High"))
+ 
+cat("\n=== SNP Type Counts ===\n");  print(snp_df)
+cat("\n=== Impact Counts ===\n");    print(impact_df)
+```
+### d. Pie chart function
+```{r}
+make_pie <- function(df, colors, title) {
+  df$legend_label <- paste0(df$label, " (", df$pct, "%)")
+  ggplot(df, aes(x = "", y = count, fill = label)) +
+    geom_col(width = 1,linewidth = 0.6) +
+    coord_polar(theta = "y", start = 0) +
+    scale_fill_manual(
+      values = colors,
+      labels = df$legend_label,
+      breaks = as.character(df$label)
+    ) +
+    labs(title = title, fill = NULL) +
+    theme_void() +
+    theme(
+      plot.title       = element_text(hjust = 0.5, size = 12,
+                                      face = "bold", margin = margin(b = 8)),
+      legend.position  = "right",
+      legend.text      = element_text(size = 9),
+      legend.key.size  = unit(0.5, "cm"),
+      plot.margin      = margin(10, 10, 10, 10)
+    )
+}
+```
+
+### e. Color palette
+```{r}
+snp_colors <- c(
+  "Missense" = "#4a7aad",
+  "Silent"   = "#89c4e1",
+  "Nonsense" = "#1a3a5c"
+)
+ 
+impact_colors <- c(
+  "Modifier" = "#f2c4c8",
+  "Low"      = "#d4a0a8",
+  "Moderate" = "#f0dcc8",
+  "High"     = "#8b1a2a"
+)
+
+```
+
+### f. Build plot
+```{r}
+p_snp    <- make_pie(snp_df,    snp_colors,    "SNP Type")
+p_impact <- make_pie(impact_df, impact_colors, "Variant Impact")
+piechart <- arrangeGrob(p_snp, p_impact, ncol = 2)
+```
+## 2. Export plot
+
+
+```{r}
+# Manhattan plot
+png("F:/materi_wgs_inbio/wgs/plot/manhattan_plot.png", 
+    res = 300, width = 3000, height = 4000, units = "px", bg = "white")
+print(manhattan_plot)
+dev.off()
+```
+```{r}
+# Piechart
+ggsave("F:/materi_wgs_inbio/wgs/plot/pie_charts.png", piechart, width = 12, height = 8, dpi = 300, bg = "white")
+```
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
