@@ -6,3 +6,11 @@
 *.fastq
 *.fastq.gz
 *.fq.gz
+# Large files
+*.bam
+*.bai
+*.sra
+*.fastq
+*.fastq.gz
+*.fq.gz
+*.sam
