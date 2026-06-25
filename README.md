@@ -1,5 +1,5 @@
 # WHOLE GENOME SEQUENCING (WGS) of _Mycobacterium tuberculosis_
-WGS pipeline (Quality Check, Genome Mapping, Variant Calling, and Variant Annotation) of _Mycobacterium tuberculosis_
+WGS pipeline (Quality Check, Genome Mapping, Variant Calling, and Variant Annotation) of _Mycobacterium tuberculosis_)
 
 
 ---
