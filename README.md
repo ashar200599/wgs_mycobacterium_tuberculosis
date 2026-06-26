@@ -30,6 +30,10 @@ WGS pipeline (Quality Check, Genome Mapping, Variant Calling, and Variant Annota
 ### Pie Chart
 ![Pie Chart](https://github.com/ashar200599/wgs_mycobacterium_tuberculosis/blob/d48d0e1f77571dcdd0a371081ebe42ee3426a054/plot/pie_charts.png)
 
+---
+
+## 📁 Repository Structure
+
 ```
 .
 ├── README.md
@@ -243,3 +247,10 @@ WGS pipeline (Quality Check, Genome Mapping, Variant Calling, and Variant Annota
 ## 👤 Author
 
 **Ashar Kurnia** 
+
+## Reference
+
+Wang, L., Yang, J., Chen, L., Wang, W., Yu, F., & Xiong, H. (2022). Whole-genome sequencing of Mycobacterium tuberculosis for prediction of drug resistance. Epidemiology and infection, 150, e22. https://doi.org/10.1017/S095026882100279X
+
+## Dataset
+[https://doi.org/10.5281/zenodo.20837135](https://doi.org/10.5281/zenodo.20845271)
