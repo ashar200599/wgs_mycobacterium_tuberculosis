@@ -1,4 +1,16 @@
 # WHOLE GENOME SEQUENCING (WGS) of _Mycobacterium tuberculosis_
+
+![srr](https://img.shields.io/badge/sample-SRR29468201-blue)
+![ncbi](https://img.shields.io/badge/NCBI_Genome-GCF_905331265.2-yellow)
+![fastqc](https://img.shields.io/badge/Conda-FastQC-green)
+![fastp](https://img.shields.io/badge/Conda-FastP-red)
+![bwa](https://img.shields.io/badge/Conda-bwa-pink)
+![samtools](https://img.shields.io/badge/Conda-samtools-magenta)
+![freebayes](https://img.shields.io/badge/Conda-freebayes-lime)
+![snpEff](https://img.shields.io/badge/Conda-snpEff-silver)
+![ggplot](https://img.shields.io/badge/R-ggplot-orange?logo=r)
+
+
 WGS pipeline (Quality Check, Genome Mapping, Variant Calling, and Variant Annotation) of _Mycobacterium tuberculosis_)
 
 
